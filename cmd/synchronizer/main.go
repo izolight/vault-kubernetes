@@ -139,7 +139,7 @@ func (sc *syncConfig) synchronize() error {
 	for k, v := range sc.Secrets {
 		// get secret from vault
 		log.Println("read", v, "from vault")
-		s, err := sc.secretClients[strings.SplitN(v, "/", 2)[0]].Read(v)
+		s, err := sc.secretClients[v].Read(v)
 		if err != nil {
 			return err
 		}
@@ -213,7 +213,7 @@ func (sc *syncConfig) prepare() error {
 	sc.secretClients = make(map[string]*kv.Client)
 	secrets := make(map[string]string)
 	for k, v := range sc.Secrets {
-		mount := strings.SplitN(v, "/", 2)[0]
+		mount := v
 		// ensure kv.Client for mount
 		if _, ok := sc.secretClients[mount]; !ok {
 			secretClient, err := kv.New(sc.vault.Client(), mount+"/")
