@@ -74,7 +74,7 @@ func newFromEnvironment() (*syncConfig, error) {
 	c := &syncConfig{}
 	c.vault, err = k8s.NewFromEnvironment()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "could not create vault k8 type")
 	}
 	c.annotation = getEnv("SYNCHRONIZER_ANNOTATION", vaultAnnotation)
 	log.Println("Using annotation [", c.annotation, "] to detect managed secrets")
@@ -141,7 +141,7 @@ func (sc *syncConfig) synchronize() error {
 		log.Println("read", v, "from vault")
 		s, err := sc.secretClients[v].Read(v)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "could not read %s", v)
 		}
 		if s == nil {
 			log.Println("secret", v, "not found")
@@ -152,7 +152,7 @@ func (sc *syncConfig) synchronize() error {
 		for k, v := range s {
 			w, err := decode(v.(string))
 			if err != nil {
-				return err
+				return errors.Wrapf(err, "could not decode %s", v)
 			}
 			data[k] = w
 		}
@@ -168,11 +168,11 @@ func (sc *syncConfig) synchronize() error {
 			if apierr.IsNotFound(err) {
 				log.Println("create secret", secret.Name, "from vault secret", v)
 				if _, err := sc.k8sClientset.CoreV1().Secrets(sc.Namespace).Create(secret); err != nil {
-					return err
+					return errors.Wrapf(err, "could not create k8s secret %v at namespace %s", secret.Name, sc.Namespace)
 				}
 				continue
 			}
-			return err
+			return errors.Wrapf(err, "could not get k8s secret %s at namespace %s", secret.Name, sc.Namespace)
 		}
 
 		if _, ok := existing.Annotations[sc.annotation]; !ok {
@@ -182,7 +182,7 @@ func (sc *syncConfig) synchronize() error {
 
 		log.Println("update secret", secret.Name, "from vault secret", v)
 		if _, err = sc.k8sClientset.CoreV1().Secrets(sc.Namespace).Update(secret); err != nil {
-			return err
+			return errors.Wrapf(err, "could not update k8s secret %s at namespace %s", secret.Name, sc.Namespace)
 		}
 	}
 	// delete obsolete secrets
@@ -218,7 +218,7 @@ func (sc *syncConfig) prepare() error {
 		if _, ok := sc.secretClients[mount]; !ok {
 			secretClient, err := kv.New(sc.vault.Client(), mount+"/")
 			if err != nil {
-				return err
+				return errors.Wrap(err, "could not create new kv client")
 			}
 			sc.secretClients[mount] = secretClient
 		}
@@ -230,7 +230,7 @@ func (sc *syncConfig) prepare() error {
 		// v is a path -> get all secrets from v
 		keys, err := sc.secretClients[mount].List(v)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "could not list %s from mount %s", v, mount)
 		}
 		if keys == nil {
 			continue
