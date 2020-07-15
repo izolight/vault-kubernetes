@@ -50,7 +50,8 @@ func BuildAuthImage() error {
 	latestImage := fmt.Sprintf("%s:latest", image)
 	versionImage := fmt.Sprintf("%s:%s", image, g)
 
-	err = sh.Run("docker", "build", "--build-arg", "BINARY=dist/authenticator", "-t", versionImage, "-f", "packaging/docker/authenticator/Dockerfile", ".")
+	goproxy := fmt.Sprintf("GOPROXY=%s", os.Getenv("GOPROXY"))
+	err = sh.Run("docker", "build", "--build-arg", "BINARY=dist/authenticator", "--build-arg", goproxy, "-t", versionImage, "-f", "packaging/docker/authenticator/Dockerfile", ".")
 	if err != nil {
 		return err
 	}
@@ -72,7 +73,8 @@ func BuildSyncImage() error {
 	latestImage := fmt.Sprintf("%s:latest", image)
 	versionImage := fmt.Sprintf("%s:%s", image, g)
 
-	err = sh.Run("docker", "build", "--build-arg", "BINARY=dist/synchronizer", "-t", versionImage, "-f", "packaging/docker/synchronizer/Dockerfile", ".")
+	goproxy := fmt.Sprintf("GOPROXY=%s", os.Getenv("GOPROXY"))
+	err = sh.Run("docker", "build", "--build-arg", "BINARY=dist/synchronizer", "--build-arg", goproxy, "-t", versionImage, "-f", "packaging/docker/synchronizer/Dockerfile", ".")
 	if err != nil {
 		return err
 	}
@@ -94,7 +96,8 @@ func BuildRenewImage() error {
 	latestImage := fmt.Sprintf("%s:latest", image)
 	versionImage := fmt.Sprintf("%s:%s", image, g)
 
-	err = sh.Run("docker", "build", "--build-arg", "BINARY=dist/token-renewer", "-t", versionImage, "-f", "packaging/docker/token-renewer/Dockerfile", ".")
+	goproxy := fmt.Sprintf("GOPROXY=%s", os.Getenv("GOPROXY"))
+	err = sh.Run("docker", "build", "--build-arg", "BINARY=dist/token-renewer", "--build-arg", goproxy, "-t", versionImage, "-f", "packaging/docker/token-renewer/Dockerfile", ".")
 	if err != nil {
 		return err
 	}

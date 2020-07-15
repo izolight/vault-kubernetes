@@ -1,6 +1,9 @@
 FROM golang:1.12-alpine as builder
 RUN apk --no-cache add git
 
+ARG GOPROXY
+
+ENV GOPROXY=$GOPROXY
 ENV GO111MODULE=on
 ENV CGO_ENABLED=0
 
